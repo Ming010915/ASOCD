@@ -1,4 +1,4 @@
-#ASOCD Scoring Tool
+# ASOCD Scoring Tool
 
 ## Configuration
 - User names can be changed in index.html file under id="header".
