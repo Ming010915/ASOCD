@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Image Example</title>
+    <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/styles.css') }}">
+</head>
+<body>
+    <div id="header">
+        <select id="userSelection" onchange="changeUser()">
+            <option value="user1">User 1</option>
+            <option value="user2">User 2</option>
+            <option value="user3">User 3</option>
+            <option value="user4">User 4</option>
+            <option value="user5">User 5</option>
+        </select>
+    </div>
+
+    <div id="image-container">
+    </div>
+
+    <div>
+        <label for="question" id="question">Is there a reasonable circle and are the 12 numbers well distributed within the circle?</label>
+    </div> 
+    <div class="button-container">
+        <button id="yes" onclick="recordFeedback(1)">Yes</button>
+        <button id="no" onclick="recordFeedback(5)">No</button>
+        <button id="impossible" onclick="recordFeedback(7)">Drawing is impossible</button>
+    </div>
+
+    <div id="feedback-form">
+        <div>
+            <label for="comments">Comments:</label>
+            <textarea id="comments" name="comments" rows="4" cols="50"></textarea>
+        </div>
+        <div>
+            <label for="myCheckbox">Is it hard to score?</label>
+            <input type="checkbox" id="myCheckbox" name="myCheckbox">
+        </div>
+    </div>
+
+    <div class="button-container">
+        <button id = "previousImage" onclick="previousImage()">Previous Image</button>
+        <button id = "nextImage" onclick="changeImage()">Next Image</button>
+    </div>
+
+    <script src="{{ url_for('static',filename='styles/script.js') }}"> </script>
+</body>
+</html>
