@@ -1,7 +1,7 @@
 # ASOCD Scoring Tool
 
 ## Configuration
-- User names can be changed in index.html file under id="header".
+- User names can be changed in \static\templates\index.html file under id="header".
 - Images need to be saved as .png file with the directory \static\images. 
 
 ## Instructions
