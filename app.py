@@ -37,7 +37,7 @@ create_table()
 @app.route('/number_of_images')
 def number_of_images():
     # Specify the path to your images folder
-    images_folder_path = 'C:/Users/leemi/OneDrive/Desktop/Work/ASOCD/static/images'
+    images_folder_path = 'static/images'
 
     # Get the list of files in the folder
     image_files = [f for f in os.listdir(images_folder_path) if os.path.isfile(os.path.join(images_folder_path, f))]
