@@ -163,6 +163,7 @@ function previousImage() {
         document.getElementById('image-container').innerHTML = '<img src="static/images/' + currentImageList[currentImageNumber] + '.png"/>';
         enableButtons();
         noMorePic = false;
+        changeLabel();
 
         fetch('/delete_data', {
             method: 'POST',
