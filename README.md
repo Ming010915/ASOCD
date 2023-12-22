@@ -1,7 +1,7 @@
 # ASOCD Scoring Tool
 
 ## Configuration
-- User names can be changed in \static\templates\index.html file under id="header".
+- User names can be changed in \templates\index.html file under id="header".
 - Images need to be saved as .png file with the directory \static\images. 
 
 ## Instructions
@@ -14,7 +14,7 @@
 - Data will be deleted after clicking "previous image" and "next image" buttons, if the user does not fully answered the questions.
 - Data from the previous images will also be deleted after clicking "previous image". 
 - Use the comment box to write additional feedbacks.
-- All data will be stored in the .db file with the format: ImageName, Feedback, Comments, Username, Hard, Question.
+- All data will be stored in the .db file.
 - When no more images are available, the buttons will be disabled, and a message will indicate this.
 - User should close the program by using Ctrl+c in the terminal.
 - After running the final.py file, the process, which includes pivoting the table, will result in the generation of a .csv file.
