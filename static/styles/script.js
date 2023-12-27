@@ -75,10 +75,13 @@ function changeUser() {
         .catch(function (error) {
             console.error('Error:', error);
         });
+    currentImageNumber = -1;
+    totalImageNumber = 0;
+    currentImageList = [];
 }
 
 function getImageTag() {
-    if (currentImageNumber+1 == totalImageNumber) {
+    if (currentImageNumber + 1 == totalImageNumber) {
         if (displayedImages.length == imageCount) {
             currentImageNumber = currentImageNumber + 1;
             noMorePic = true;
@@ -87,13 +90,12 @@ function getImageTag() {
         var randomImage;
         do {
             randomImage = imageList[Math.floor(Math.random() * imageCount)];
-            var imageNameWithoutExtension = randomImage.replace(/\.[^/.]+$/, "");
-        } while (displayedImages.includes(imageNameWithoutExtension));
-
-        displayedImages.push(imageNameWithoutExtension);
-        currentImageList.push(imageNameWithoutExtension);
+            //var imageNameWithoutExtension = randomImage.replace(/\.[^/.]+$/, "");
+        } while (displayedImages.includes(randomImage));
+        displayedImages.push(randomImage);
+        currentImageList.push(randomImage);
         totalImageNumber++;
-        currentImageNumber++;   
+        currentImageNumber++;
 
         var testImage = new Image();
         testImage.src = 'static/images/' + randomImage;
@@ -123,22 +125,23 @@ function changeImage() {
         document.getElementById('question').innerText = " ";
     }
 
-    fetch('/delete_data', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: 'username=' + encodeURIComponent(currentUser) + '&imageName=' + encodeURIComponent(document.getElementById('image-container').firstChild.src),
-    })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
+    if (!noMorePic) {
+        fetch('/delete_data', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'username=' + encodeURIComponent(currentUser) + '&imageName=' + encodeURIComponent(document.getElementById('image-container').firstChild.src),
         })
-        .catch(error => {
-            console.error('Error:', error);
-        });
-    
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
 }
 
 function previousImage() {
