@@ -35,6 +35,9 @@ fetch('/number_of_images')
     .then(function (data) {
         imageCount = data.length;
         imageList = data.image_files;
+        if (displayedImages.length == imageCount) {
+            noMorePic = true;
+        }
     })
     .catch(function (error) {
         console.error('Error:', error);
@@ -90,7 +93,6 @@ function getImageTag() {
         var randomImage;
         do {
             randomImage = imageList[Math.floor(Math.random() * imageCount)];
-            //var imageNameWithoutExtension = randomImage.replace(/\.[^/.]+$/, "");
         } while (displayedImages.includes(randomImage));
         displayedImages.push(randomImage);
         currentImageList.push(randomImage);
@@ -107,7 +109,7 @@ function getImageTag() {
         }
     } else {
         currentImageNumber = currentImageNumber + 1;
-        return '<img src="static/images/' + currentImageList[currentImageNumber] + '.png"/>';
+        return '<img src="static/images/' + currentImageList[currentImageNumber] + '"/>';
     }
 }
 
@@ -163,17 +165,19 @@ function previousImage() {
             });
         currentQuestion = 1;
         currentImageNumber--;
-        document.getElementById('image-container').innerHTML = '<img src="static/images/' + currentImageList[currentImageNumber] + '.png"/>';
+        var imageName = currentImageList[currentImageNumber];
+        document.getElementById('image-container').innerHTML = '<img src="static/images/' + imageName + '"/>';        
         enableButtons();
         noMorePic = false;
         changeLabel();
+        var imageName1 = document.getElementById('image-container').firstChild.src;
 
         fetch('/delete_data', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
             },
-            body: 'username=' + encodeURIComponent(currentUser) + '&imageName=' + encodeURIComponent(document.getElementById('image-container').firstChild.src),
+            body: 'username=' + encodeURIComponent(currentUser) + '&imageName=' + encodeURIComponent(imageName1),
         })
             .then(response => {
                 if (!response.ok) {
