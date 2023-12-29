@@ -1,11 +1,10 @@
 var currentUser = document.getElementById('userSelection').value;
-var displayedImages = [];
+var registeredImages = []; // List of images that are registered in the database
 var noMorePic = false;
-var imageCount = 0;
-var imageList = [];
+var listOfImages = []; // List of all images
 var currentQuestion = 1;
 var userScore = 0;
-var currentImageList = [];
+var currentImageList = []; // List of images that are shown in the current session
 var currentImageNumber = -1;
 var totalImageNumber = 0;
 
@@ -22,26 +21,32 @@ fetch('/get_used_images')
         return response.json();
     })
     .then(function (data) {
-        displayedImages = data;
+        registeredImages = data;
     })
     .catch(function (error) {
         console.error('Error:', error);
     });
 
-fetch('/number_of_images')
+fetch('/list_of_images')
     .then(function (response) {
         return response.json();
     })
     .then(function (data) {
-        imageCount = data.length;
-        imageList = data.image_files;
-        if (displayedImages.length == imageCount) {
+        listOfImages = data.image_files;
+        if (registeredImages.length == listOfImages.length) {
             noMorePic = true;
         }
     })
     .catch(function (error) {
         console.error('Error:', error);
     });
+
+window.addEventListener('load', function () {
+    changeImage();
+    if (noMorePic) {
+        document.getElementById('previousImage').disabled = true;
+    }
+});
 
 function changeUser() {
     if (currentImageNumber == -1) {
@@ -64,17 +69,16 @@ function changeUser() {
             return response.json();
         })
         .then(function (data) {
-            displayedImages = data;
-            if (displayedImages.length == imageCount) {
+            registeredImages = data;
+            if (registeredImages.length == listOfImages.length) {
                 noMorePic = true;
                 disableButtons();
-                document.getElementById('previousImage').disabled = false;
-                changeImage();
+                document.getElementById('previousImage').disabled = true;
             } else {
                 noMorePic = false;
                 enableButtons();
-                changeImage();
             }
+            changeImage();
         })
         .catch(function (error) {
             console.error('Error:', error);
@@ -84,41 +88,9 @@ function changeUser() {
     currentImageList = [];
 }
 
-function getImageTag() {
-    if (currentImageNumber + 1 == totalImageNumber) {
-        if (displayedImages.length == imageCount) {
-            currentImageNumber = currentImageNumber + 1;
-            noMorePic = true;
-            return '<p id="no-more-images">No more images to show</p>';
-        }
-        var randomImage;
-        do {
-            randomImage = imageList[Math.floor(Math.random() * imageCount)];
-        } while (displayedImages.includes(randomImage));
-        displayedImages.push(randomImage);
-        currentImageList.push(randomImage);
-        totalImageNumber++;
-        currentImageNumber++;
-
-        var testImage = new Image();
-        testImage.src = 'static/images/' + randomImage;
-
-        if (testImage.width > 0) {
-            return '<img src="' + testImage.src + '"/>';
-        } else {
-            return '<img src="' + testImage.src + '" alt="Oh no, the image is broken!"/>';
-        }
-    } else {
-        currentImageNumber = currentImageNumber + 1;
-        return '<img src="static/images/' + currentImageList[currentImageNumber] + '"/>';
-    }
-}
-
 function changeImage() {
-    var imageContainer = document.getElementById('image-container');
-    imageContainer.innerHTML = getImageTag();
-    document.getElementById('myCheckbox').checked = false;
-    document.getElementById('comments').value = '';
+    document.getElementById('image-container').innerHTML = getImageTag();
+    clearFeedback();
     enableButtons();
     currentQuestion = 1;
     changeLabel();
@@ -147,6 +119,36 @@ function changeImage() {
     }
 }
 
+function getImageTag() {
+    if (currentImageNumber + 1 == totalImageNumber) {
+        if (registeredImages.length == listOfImages.length) {
+            currentImageNumber = currentImageNumber + 1;
+            noMorePic = true;
+            return '<p id="no-more-images">No more images to show</p>';
+        }
+        var randomImage;
+        do {
+            randomImage = listOfImages[Math.floor(Math.random() * listOfImages.length)];
+        } while (registeredImages.includes(randomImage));
+        registeredImages.push(randomImage);
+        currentImageList.push(randomImage);
+        totalImageNumber++;
+        currentImageNumber++;
+
+        var testImage = new Image();
+        testImage.src = 'static/images/' + randomImage;
+
+        if (testImage.width > 0) {
+            return '<img src="' + testImage.src + '"/>';
+        } else {
+            return '<img src="' + testImage.src + '" alt="Oh no, the image is broken!"/>';
+        }
+    } else {
+        currentImageNumber = currentImageNumber + 1;
+        return '<img src="static/images/' + currentImageList[currentImageNumber] + '"/>';
+    }
+}
+
 function previousImage() {
     if (currentImageNumber > 0) {
         if (!noMorePic) {
@@ -170,8 +172,7 @@ function previousImage() {
         currentImageNumber--;
         var imageName = currentImageList[currentImageNumber];
         document.getElementById('image-container').innerHTML = '<img src="static/images/' + imageName + '"/>';
-        document.getElementById('myCheckbox').checked = false;
-        document.getElementById('comments').value = '';
+        clearFeedback();
         enableButtons();
         noMorePic = false;
         changeLabel();
@@ -205,7 +206,6 @@ function changeQuestion(data) {
             recordFeedback(0);
         }
         document.getElementById("impossible").style.display = 'none';
-
     } else if (currentQuestion == 2) {
         if (data == 1) {
             currentQuestion = 4;
@@ -275,9 +275,10 @@ function enableButtons() {
     }
 }
 
-window.addEventListener('load', function () {
-    changeImage();
-});
+function clearFeedback() {
+    document.getElementById('myCheckbox').checked = false;
+    document.getElementById('comments').value = '';
+}
 
 function recordFeedback(feedbackValue) {
     var comments = document.getElementById('comments').value;
@@ -293,9 +294,9 @@ function recordFeedback(feedbackValue) {
     })
         .then(response => response.text())
         .then(userScore = userScore + feedbackValue)
-        .then(data => {
+        .then(() => {
             changeQuestion(feedbackValue);
-            document.getElementById('comments').value = '';
+            clearFeedback();
         })
         .catch(error => {
             console.error('Error:', error);

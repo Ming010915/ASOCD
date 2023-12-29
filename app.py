@@ -34,17 +34,15 @@ def write_to_sqlite(entry):
     
 create_table()
 
-@app.route('/number_of_images')
+@app.route('/list_of_images')
 def number_of_images():
     # Specify the path to your images folder
     images_folder_path = 'static/images'
 
-    # Get the list of files in the folder
     image_files = [f for f in os.listdir(images_folder_path) if os.path.isfile(os.path.join(images_folder_path, f))]
     
     message = {
         "image_files": image_files,
-        "length": len(image_files)
     }
     
     return jsonify(message)
@@ -75,15 +73,12 @@ def index():
 
 @app.route('/record_data', methods=['POST'])
 def record_data():
-    comments = request.form.get('comments')
     image_name = request.form.get('imageName')
     parts = image_name.split("/")
-
-    # Find the index of "images" in the parts list
     index = parts.index("images")
-
-    # Get the substring after "images/"
     result = "/".join(parts[index + 1:])
+    
+    comments = request.form.get('comments')
     username = request.form.get('username')
     score = request.form.get('score')
     hard = request.form.get('hard')
@@ -112,22 +107,17 @@ def delete_uncompleted_entries():
 
 @app.route('/delete_data', methods=['POST'])
 def delete_data():
-    imageName1 = request.form.get('imageName')
-    username1 = request.form.get('username')
-
-    parts = imageName1.split("/")
-
-    # Find the index of "images" in the parts list
+    imageName = request.form.get('imageName')
+    parts = imageName.split("/")
     index = parts.index("images")
-
-    # Get the substring after "images/"
     result = "/".join(parts[index + 1:])
-        
+
+    username = request.form.get('username')        
     with get_db_connection() as conn:
         conn.execute('''
             DELETE FROM feedback_data
             WHERE image_name = ? AND username = ?
-        ''', (result, username1,)
+        ''', (result, username,)
         )
     return redirect(url_for('index'))
 
