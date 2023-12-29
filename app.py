@@ -54,12 +54,12 @@ def get_used_images():
     with get_db_connection() as conn:
         cursor = conn.cursor()
         cursor.execute('''
-            SELECT image_name FROM feedback_data WHERE username = ?
+            SELECT DISTINCT image_name FROM feedback_data WHERE username = ?
         ''', (username,))
         used_images = cursor.fetchall()
         processed_data = [item[0] for item in used_images]
         cursor.execute('''
-            SELECT image_name
+            SELECT DISTINCT image_name
             FROM feedback_data
             GROUP BY image_name
             HAVING COUNT(DISTINCT username) >= 3;

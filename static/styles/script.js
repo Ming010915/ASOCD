@@ -68,6 +68,7 @@ function changeUser() {
             if (displayedImages.length == imageCount) {
                 noMorePic = true;
                 disableButtons();
+                document.getElementById('previousImage').disabled = false;
                 changeImage();
             } else {
                 noMorePic = false;
@@ -117,6 +118,7 @@ function changeImage() {
     var imageContainer = document.getElementById('image-container');
     imageContainer.innerHTML = getImageTag();
     document.getElementById('myCheckbox').checked = false;
+    document.getElementById('comments').value = '';
     enableButtons();
     currentQuestion = 1;
     changeLabel();
@@ -124,10 +126,9 @@ function changeImage() {
     if (noMorePic) {
         disableButtons();
         document.getElementById('nextImage').disabled = true;
+        document.getElementById('previousImage').disabled = false;
         document.getElementById('question').innerText = " ";
-    }
-
-    if (!noMorePic) {
+    } else {
         fetch('/delete_data', {
             method: 'POST',
             headers: {
@@ -148,36 +149,39 @@ function changeImage() {
 
 function previousImage() {
     if (currentImageNumber > 0) {
-        fetch('/delete_data', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: 'username=' + encodeURIComponent(currentUser) + '&imageName=' + encodeURIComponent(document.getElementById('image-container').firstChild.src),
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
+        if (!noMorePic) {
+            fetch('/delete_data', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'username=' + encodeURIComponent(currentUser) + '&imageName=' + encodeURIComponent(document.getElementById('image-container').firstChild.src),
             })
-            .catch(error => {
-                console.error('Error:', error);
-            });
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
         currentQuestion = 1;
         currentImageNumber--;
         var imageName = currentImageList[currentImageNumber];
-        document.getElementById('image-container').innerHTML = '<img src="static/images/' + imageName + '"/>';        
+        document.getElementById('image-container').innerHTML = '<img src="static/images/' + imageName + '"/>';
+        document.getElementById('myCheckbox').checked = false;
+        document.getElementById('comments').value = '';
         enableButtons();
         noMorePic = false;
         changeLabel();
-        var imageName1 = document.getElementById('image-container').firstChild.src;
 
         fetch('/delete_data', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
             },
-            body: 'username=' + encodeURIComponent(currentUser) + '&imageName=' + encodeURIComponent(imageName1),
+            body: 'username=' + encodeURIComponent(currentUser) + '&imageName=' + encodeURIComponent(document.getElementById('image-container').firstChild.src),
         })
             .then(response => {
                 if (!response.ok) {
