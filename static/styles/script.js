@@ -6,46 +6,24 @@ var currentQuestion = 1;
 var userScore = 0;
 var currentImageList = []; // List of images that are shown in the current session
 var currentImageNumber = -1;
-var totalImageNumber = 0;
-
-fetch('/current_user', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: 'username=' + encodeURIComponent(currentUser),
-})
-
-fetch('/get_used_images')
-    .then(function (response) {
-        return response.json();
-    })
-    .then(function (data) {
-        registeredImages = data;
-    })
-    .catch(function (error) {
-        console.error('Error:', error);
-    });
-
-fetch('/list_of_images')
-    .then(function (response) {
-        return response.json();
-    })
-    .then(function (data) {
-        listOfImages = data.image_files;
-        if (registeredImages.length == listOfImages.length) {
-            noMorePic = true;
-        }
-    })
-    .catch(function (error) {
-        console.error('Error:', error);
-    });
+var totalImageNumber = 0; // Total number of images that are shown in the current session
 
 window.addEventListener('load', function () {
-    changeImage();
-    if (noMorePic) {
-        document.getElementById('previousImage').disabled = true;
-    }
+    current_user();
+    
+    fetch('/list_of_images')
+        .then(function (response) {
+            return response.json();
+        })
+        .then(function (data) {
+            listOfImages = data.image_files;
+        })
+        .catch(function (error) {
+            console.error('Error:', error);
+        })
+        .then(function () {
+            get_used_images();
+        });
 });
 
 function changeUser() {
@@ -54,35 +32,10 @@ function changeUser() {
     } else {
         document.getElementById('previousImage').disabled = false;
     }
+
     currentUser = document.getElementById('userSelection').value;
-
-    fetch('/current_user', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: 'username=' + encodeURIComponent(currentUser),
-    })
-
-    fetch('/get_used_images')
-        .then(function (response) {
-            return response.json();
-        })
-        .then(function (data) {
-            registeredImages = data;
-            if (registeredImages.length == listOfImages.length) {
-                noMorePic = true;
-                disableButtons();
-                document.getElementById('previousImage').disabled = true;
-            } else {
-                noMorePic = false;
-                enableButtons();
-            }
-            changeImage();
-        })
-        .catch(function (error) {
-            console.error('Error:', error);
-        });
+    current_user();
+    get_used_images();
     currentImageNumber = -1;
     totalImageNumber = 0;
     currentImageList = [];
@@ -98,24 +51,10 @@ function changeImage() {
     if (noMorePic) {
         disableButtons();
         document.getElementById('nextImage').disabled = true;
-        document.getElementById('previousImage').disabled = false;
+        document.getElementById('previousImage').disabled = true;
         document.getElementById('question').innerText = " ";
     } else {
-        fetch('/delete_data', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: 'username=' + encodeURIComponent(currentUser) + '&imageName=' + encodeURIComponent(document.getElementById('image-container').firstChild.src),
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
+        delete_data();
     }
 }
 
@@ -136,62 +75,34 @@ function getImageTag() {
         currentImageNumber++;
 
         var testImage = new Image();
-        testImage.src = 'static/images/' + randomImage;
 
-        if (testImage.width > 0) {
-            return '<img src="' + testImage.src + '"/>';
+        testImage.src = '/images/' + randomImage;
+
+        if (testImage != null) {
+            return '<img src="' + testImage.src + '"alt=""/>';
         } else {
             return '<img src="' + testImage.src + '" alt="Oh no, the image is broken!"/>';
         }
     } else {
         currentImageNumber = currentImageNumber + 1;
-        return '<img src="static/images/' + currentImageList[currentImageNumber] + '"/>';
+        return '<img src="/images/' + currentImageList[currentImageNumber] + '"/>';
     }
 }
 
 function previousImage() {
     if (currentImageNumber > 0) {
         if (!noMorePic) {
-            fetch('/delete_data', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: 'username=' + encodeURIComponent(currentUser) + '&imageName=' + encodeURIComponent(document.getElementById('image-container').firstChild.src),
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                });
+            delete_data();
         }
         currentQuestion = 1;
         currentImageNumber--;
         var imageName = currentImageList[currentImageNumber];
-        document.getElementById('image-container').innerHTML = '<img src="static/images/' + imageName + '"/>';
+        document.getElementById('image-container').innerHTML = '<img src="/images/' + imageName + '"/>';
         clearFeedback();
         enableButtons();
         noMorePic = false;
         changeLabel();
-
-        fetch('/delete_data', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: 'username=' + encodeURIComponent(currentUser) + '&imageName=' + encodeURIComponent(document.getElementById('image-container').firstChild.src),
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
+        delete_data();
     }
 }
 
@@ -299,6 +210,56 @@ function recordFeedback(feedbackValue) {
             clearFeedback();
         })
         .catch(error => {
+            console.error('Error:', error);
+        });
+}
+
+function delete_data() {
+    fetch('/delete_data', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'username=' + encodeURIComponent(currentUser) + '&imageName=' + encodeURIComponent(document.getElementById('image-container').firstChild.src),
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+}
+
+function current_user() {
+    fetch('/current_user', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'username=' + encodeURIComponent(currentUser),
+    })
+}
+
+function get_used_images() {
+    fetch('/get_used_images')
+        .then(function (response) {
+            return response.json();
+        })
+        .then(function (data) {
+            registeredImages = data;
+            if (registeredImages.length == listOfImages.length) {
+                noMorePic = true;
+                disableButtons();
+                document.getElementById('previousImage').disabled = true;
+            } else {
+                noMorePic = false;
+                enableButtons();
+            }
+            changeImage();
+        })
+        .catch(function (error) {
             console.error('Error:', error);
         });
 }
