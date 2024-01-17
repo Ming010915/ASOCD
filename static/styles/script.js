@@ -7,6 +7,7 @@ var userScore = 0;
 var currentImageList = []; // List of images that are shown in the current session
 var currentImageNumber = -1;
 var totalImageNumber = 0; // Total number of images that are shown in the current session
+var availableImages = []; // List of images that are not registered in the database
 
 window.addEventListener('load', function () {
     current_user();
@@ -42,7 +43,34 @@ function changeUser() {
 }
 
 function changeImage() {
-    document.getElementById('image-container').innerHTML = getImageTag();
+    if (currentImageNumber + 1 == totalImageNumber) {
+        if (registeredImages.length == listOfImages.length) {
+            currentImageNumber++;
+            noMorePic = true;
+            document.getElementById('image-container').innerHTML = '<p id="no-more-images">No more images to show</p>';
+        } else {
+            var randomImage = availableImages[Math.floor(Math.random() * availableImages.length)];
+
+            var testImage = new Image();
+            testImage.src = '/images/' + randomImage;
+
+            document.getElementById('image-container').innerHTML = '<img src="' + testImage.src + '"alt=""/>';
+
+            if (testImage != null) {
+                document.getElementById('image-container').innerHTML = '<img src="' + testImage.src + '"alt=""/>';
+            } else {
+                document.getElementById('image-container').innerHTML = '<img src="' + testImage.src + '" alt="Oh no, the image is broken!"/>';
+            }
+            registeredImages.push(randomImage);
+            currentImageList.push(randomImage);
+            availableImages.splice(availableImages.indexOf(randomImage), 1);
+            totalImageNumber++;
+            currentImageNumber++;
+        }
+    } else {
+        currentImageNumber = currentImageNumber + 1;
+        document.getElementById('image-container').innerHTML = '<img src="/images/' + currentImageList[currentImageNumber] + '"/>';
+    }
     clearFeedback();
     enableButtons();
     currentQuestion = 1;
@@ -55,37 +83,6 @@ function changeImage() {
         document.getElementById('question').innerText = " ";
     } else {
         delete_data();
-    }
-}
-
-function getImageTag() {
-    if (currentImageNumber + 1 == totalImageNumber) {
-        if (registeredImages.length == listOfImages.length) {
-            currentImageNumber = currentImageNumber + 1;
-            noMorePic = true;
-            return '<p id="no-more-images">No more images to show</p>';
-        }
-        var randomImage;
-        do {
-            randomImage = listOfImages[Math.floor(Math.random() * listOfImages.length)];
-        } while (registeredImages.includes(randomImage));
-        registeredImages.push(randomImage);
-        currentImageList.push(randomImage);
-        totalImageNumber++;
-        currentImageNumber++;
-
-        var testImage = new Image();
-
-        testImage.src = '/images/' + randomImage;
-
-        if (testImage != null) {
-            return '<img src="' + testImage.src + '"alt=""/>';
-        } else {
-            return '<img src="' + testImage.src + '" alt="Oh no, the image is broken!"/>';
-        }
-    } else {
-        currentImageNumber = currentImageNumber + 1;
-        return '<img src="/images/' + currentImageList[currentImageNumber] + '"/>';
     }
 }
 
@@ -249,6 +246,7 @@ function get_used_images() {
         })
         .then(function (data) {
             registeredImages = data;
+            availableImages = listOfImages.filter(element => !registeredImages.includes(element));
             if (registeredImages.length == listOfImages.length) {
                 noMorePic = true;
                 disableButtons();
