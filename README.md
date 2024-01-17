@@ -2,7 +2,8 @@
 
 ## Configuration
 - User names can be changed in \templates\index.html file under id="header".
-- Images need to be saved as .png file with the directory \static\images. 
+- In the app.py file, the following variables need to be specified: IMAGES_FOLDER_PATH, DB_DIRECTORY, DATABASE_FILE, TABLE_NAME.
+- In the final.py file, the following variables need to be specified: DB_DIRECTORY, OLD_DATABASE_FILE, OLD_TABLE_NAME, NEW_DATABASE_FILE, NEW_TABLE_NAME, CSV_OUTPUT_FILE.
 
 ## Instructions
 - Create virtual environment using `python -m venv env`
