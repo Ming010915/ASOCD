@@ -5,6 +5,10 @@
 - Images need to be saved as .png file with the directory \static\images. 
 
 ## Instructions
+- Create virtual environment using `python -m venv env`
+- Activate the virtual environment
+    - On Windows: `env\Scripts\activate.bat`
+    - On Unix or MacOS: `source env/bin/activate`
 - Run requirement.txt file to install all the required packages.
 `pip install -r requirements.txt`
 - Run the app.py file
