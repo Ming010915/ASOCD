@@ -1,60 +1,53 @@
+import os
 import sqlite3
 import pandas as pd
 import csv
 
-original_conn = sqlite3.connect('feedback_data.db')
+# Specify the desired directory and file name for the database file
+DB_DIRECTORY = ''
+OLD_DATABASE_FILE = 'feedback_data.db'
+DATABASE_FILE = 'new_database.db'
+TABLE_NAME = 'feedback'
+NEW_TABLE_NAME = 'new_feedback'
+OUTPUT_FILE = 'output.csv'
+
+original_conn = sqlite3.connect(os.path.join(DB_DIRECTORY, OLD_DATABASE_FILE))
 
 def delete_uncompleted_entries():
     with original_conn:
-        original_conn.execute('''
-            DELETE FROM feedback_data
+        original_conn.execute(f'''
+            DELETE FROM {TABLE_NAME}
             WHERE image_name NOT IN (
                 SELECT DISTINCT image_name
-                FROM feedback_data
+                FROM {TABLE_NAME}
                 WHERE question = 6
             )
         ''')
 
-# Query the data from the original SQLite database
-query = "SELECT * FROM feedback_data WHERE score != 0"
+query = "SELECT * FROM " + TABLE_NAME + " WHERE score != 0"
 df = pd.read_sql_query(query, original_conn)
 original_conn.close()
 
-# Pivot the table
 pivot_df = pd.pivot_table(df, values=['score', 'comments', 'hard'], index=['image_name', 'question'], columns=['username'], aggfunc='first')
 
-# Flatten the multi-level columns and reset the index
 pivot_df.columns = [f'{username}_{metric}' for username, metric in pivot_df.columns]
 pivot_df.reset_index(inplace=True)
 
-# Create a new DataFrame with the desired structure
 new_df = pivot_df.copy()
 
-new_conn = sqlite3.connect('new_database.db')
+new_conn = sqlite3.connect(os.path.join(DB_DIRECTORY, DATABASE_FILE))
 
-new_df.to_sql('new_table', new_conn, index=False, if_exists='replace')
+new_df.to_sql(NEW_TABLE_NAME, new_conn, index=False, if_exists='replace')
 
 new_conn.close()
-
-database_file = 'new_database.db'
-table_name = 'new_table'
-output_file = 'output_file.csv'
-
-# Connect to the SQLite database
-conn = sqlite3.connect(database_file)
+conn = sqlite3.connect(os.path.join(DB_DIRECTORY, DATABASE_FILE))
 cursor = conn.cursor()
 
-# Execute a query to select all data from the table
-cursor.execute(f"SELECT * FROM {table_name} ORDER BY image_name ASC")
-
-# Fetch all rows
+cursor.execute(f"SELECT * FROM {NEW_TABLE_NAME} ORDER BY image_name ASC")
 rows = cursor.fetchall()
-
-# Get column names
 columns = [description[0] for description in cursor.description]
 
-# Write to CSV file
-with open(output_file, 'w', newline='') as csv_file:
+with open(OUTPUT_FILE, 'w', newline='') as csv_file:
     csv_writer = csv.writer(csv_file)
     csv_writer.writerow(columns)
     csv_writer.writerows(rows)
