@@ -5,19 +5,11 @@ import atexit
 
 app = Flask(__name__)
 
-# Specify the path to the folder where the images are stored
+# Specify the desired directory and file name
 IMAGES_FOLDER_PATH = r""
-
-# Specify the desired directory for the database file
 DB_DIRECTORY = r""
-
-# Specify the desired database name
 DATABASE_FILE = 'feedback_data.db'
-
-# Specify the database table name
 TABLE_NAME = 'feedback'
-
-username = ""
 
 def get_db_connection():
     return sqlite3.connect(os.path.join(DB_DIRECTORY, DATABASE_FILE))
@@ -42,7 +34,19 @@ def write_to_sqlite(entry):
             INSERT INTO {TABLE_NAME} (image_name, score, comments, username, hard, question)
             VALUES (?, ?, ?, ?, ?, ?)
         ''', (entry['image_name'], entry["score"], entry['comments'], entry['username'], entry['hard'], entry['question']))
-    
+
+def delete_uncompleted_entries():
+    with get_db_connection() as conn:
+        conn.execute(f'''
+            DELETE FROM {TABLE_NAME}
+            WHERE image_name NOT IN (
+                SELECT DISTINCT image_name
+                FROM {TABLE_NAME}
+                WHERE question = 6
+            );
+        ''')
+        
+username = ""
 create_table()
 
 @app.route('/list_of_images')
@@ -100,17 +104,6 @@ def current_user():
     global username 
     username = request.form.get('username')
     return username
-
-def delete_uncompleted_entries():
-    with get_db_connection() as conn:
-        conn.execute(f'''
-            DELETE FROM {TABLE_NAME}
-            WHERE image_name NOT IN (
-                SELECT DISTINCT image_name
-                FROM {TABLE_NAME}
-                WHERE question = 6
-            );
-        ''')
 
 @app.route('/delete_data', methods=['POST'])
 def delete_data():
